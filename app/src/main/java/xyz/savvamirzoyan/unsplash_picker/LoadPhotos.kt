@@ -3,6 +3,7 @@ package xyz.savvamirzoyan.unsplash_picker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhoto
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -14,6 +15,37 @@ suspend fun loadPhotos(page: Int): List<UnsplashPhoto> = withContext(Dispatchers
     try {
         val url =
             URL("https://api.unsplash.com/collections/317099/photos?client_id=${UnsplashPickerConfig.ACCESS_KEY}&page=$page&per_page=${UnsplashPickerConfig.PER_PAGE}")
+
+        urlConnection = url.openConnection() as HttpURLConnection
+
+        // Set up the connection properties
+        urlConnection.requestMethod = "GET"
+
+        // Read the response using coroutines
+        val inputStream = urlConnection.inputStream
+        val reader = BufferedReader(InputStreamReader(inputStream))
+        val stringBuilder = StringBuilder()
+
+        var line: String? = reader.readLine()
+        while (line != null) {
+            stringBuilder.append(line).append("\n")
+            line = reader.readLine()
+        }
+
+        return@withContext parseJsonToUnsplashPhotos(stringBuilder.toString())
+    } catch (e: Exception) {
+        return@withContext emptyList()
+    } finally {
+        urlConnection?.disconnect()
+    }
+}
+
+suspend fun loadPhotos(page: Int, searchQuery: String): List<UnsplashPhoto> = withContext(Dispatchers.IO) {
+    var urlConnection: HttpURLConnection? = null
+
+    try {
+        val url =
+            URL("https://api.unsplash.com/collections/317099/photos?client_id=${UnsplashPickerConfig.ACCESS_KEY}&page=$page&per_page=${UnsplashPickerConfig.PER_PAGE}&query=$searchQuery")
 
         urlConnection = url.openConnection() as HttpURLConnection
 

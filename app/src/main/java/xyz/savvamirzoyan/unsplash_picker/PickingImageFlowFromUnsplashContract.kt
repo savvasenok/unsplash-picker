@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContract
+import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhoto
 
 class PickingImageFlowFromUnsplashContract : ActivityResultContract<Boolean, List<UnsplashPhoto>>() {
 

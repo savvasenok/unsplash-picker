@@ -2,6 +2,7 @@
     <string name="app_name">unsplash-picker</string>
     <string name="search_hint">Search on Unsplash</string>
     <plurals name="pictures">
+        <item quantity="zero">%d pictures</item>
         <item quantity="one">%d picture</item>
         <item quantity="other">%d pictures</item>
     </plurals>

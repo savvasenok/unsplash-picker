@@ -1,4 +1,4 @@
-package xyz.savvamirzoyan.unsplash_picker
+package xyz.savvamirzoyan.unsplash_picker.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

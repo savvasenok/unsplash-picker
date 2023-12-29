@@ -6,7 +6,6 @@ import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.imageview.ShapeableImageView
 
 class ExampleActivity : AppCompatActivity(R.layout.activity_example) {
 

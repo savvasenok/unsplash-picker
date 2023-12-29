@@ -15,6 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Unsplashpicker"
         tools:targetApi="31">
+
         <activity
             android:name=".ExampleActivity"
             android:exported="true">
@@ -30,5 +31,4 @@
             android:exported="false"
             android:launchMode="singleTask" />
     </application>
-
 </manifest>

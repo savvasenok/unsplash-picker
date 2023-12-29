@@ -4,165 +4,221 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
 import androidx.core.view.marginBottom
+import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.search.SearchBar
-import com.google.android.material.search.SearchView
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
+import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhoto
+import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhotoUi
 
 class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery) {
 
-    private var cachedPhotos: List<UnsplashPhoto> = emptyList()
-    private var cachedPhotosUi: List<UnsplashPhotoUi> = emptyList()
-    private val selectedPhotos = mutableSetOf<String>()
+    private var lastSelectedAmount = 0
+
     private var lastLoadedPage = 1
+    private var lastLoadedSearchPage = 1
 
     private val appbar by lazy { findViewById<AppBarLayout>(R.id.appbar) }
-    private val searchView by lazy { findViewById<SearchView>(R.id.search_view) }
     private val rvImages by lazy { findViewById<RecyclerView>(R.id.rv_images) }
-    private val rvSearchResultImages by lazy { findViewById<RecyclerView>(R.id.rv_searchResultImages) }
-    private val containerSelectMultiple by lazy { findViewById<LinearLayout>(R.id.container_selectMultiple) }
+    private val containerSelectMultiple by lazy { findViewById<MaterialCardView>(R.id.container_selectMultiple) }
     private val buttonCancel by lazy { findViewById<MaterialButton>(R.id.button_cancel) }
     private val buttonContinue by lazy { findViewById<MaterialButton>(R.id.button_continue) }
     private val tvCounter by lazy { findViewById<MaterialTextView>(R.id.tv_counter) }
     private val rvSelectedPhotos by lazy { findViewById<RecyclerView>(R.id.rv_selectedPhotos) }
+    private val etSearchQuery by lazy { findViewById<TextInputEditText>(R.id.et_search_query) }
+    private val tvNoPhotos by lazy { findViewById<MaterialTextView>(R.id.tv_noPhotos) }
 
     private val isSingleSelectionMode: Boolean by lazy { intent.extras?.getBoolean(KEY_IS_SINGLE_SELECT)!! }
+    private val smallSize by lazy { resources.getDimensionPixelSize(R.dimen.small_size) }
+    private val bigSize by lazy { resources.getDimensionPixelSize(R.dimen.big_size) }
+    private val selectedImageHeight by lazy {
+        resources.getDimensionPixelSize(R.dimen.selected_image_recycler_view_height).toFloat()
+    }
+
+    private val animationManager by lazy { AnimationManager() }
+
+    private val loadedImagesFlow = MutableStateFlow<List<UnsplashPhoto>>(emptyList())
+    private val selectedImagesFlow = MutableStateFlow<List<String>>(emptyList())
+    private val loadedImagesUiFlow = combine(
+        loadedImagesFlow.onEach { images -> images.onEach { Glide.with(this).load(it).preload(500, 500) } },
+        selectedImagesFlow
+    ) { images, selectedIds ->
+        images.map { UnsplashPhotoUi(id = it.id, thumb = it.thumb, isChecked = it.id in selectedIds) }
+    }
+        .flowOn(Dispatchers.Default)
+        .onEach { imagesUi ->
+
+            tvNoPhotos.isVisible = imagesUi.isEmpty()
+
+            val onlySelected = imagesUi.filter { it.isChecked }
+
+            if (onlySelected.isEmpty() && lastSelectedAmount > 0) {
+
+                animationManager.animateHeight(
+                    from = selectedImageHeight,
+                    to = 0f,
+                    onStart = { selectedAdapter.submitList(onlySelected) },
+                    onChange = { rvSelectedPhotos.updateLayoutParams { height = it } }
+                )
+            } else if (onlySelected.size == 1 && lastSelectedAmount == 0) {
+
+                animationManager.animateHeight(
+                    from = 0f,
+                    to = selectedImageHeight,
+                    onEnd = { selectedAdapter.submitList(onlySelected) },
+                    onChange = { rvSelectedPhotos.updateLayoutParams { height = it } }
+                )
+            } else {
+                selectedAdapter.submitList(onlySelected)
+            }
+
+            adapter.submitList(imagesUi)
+            lastSelectedAmount = onlySelected.size
+        }.stateIn(lifecycleScope, SharingStarted.Eagerly, emptyList())
 
     private val adapter: ImagesAdapter by lazy {
         if (isSingleSelectionMode) ImagesAdapter(false, ::loadMore, ::returnSingleResult)
         else ImagesAdapter(false, ::loadMore) { id ->
+
+            val selectedPhotos = selectedImagesFlow.value.toMutableList()
+
             if (selectedPhotos.contains(id)) selectedPhotos.remove(id)
             else selectedPhotos.add(id)
 
-            updateCachedPhotosUi()
-            updatedMultipleSelection()
+            selectedImagesFlow.value = selectedPhotos
+
             updateMultipleSelectionContainerContent()
         }
     }
-
-    private val searchAdapter by lazy { ImagesAdapter(false, ::loadMore, ::returnSingleResult) }
 
     private val selectedAdapter: ImagesAdapter by lazy {
         ImagesAdapter(true, ::loadMore) { photoId ->
+            val selectedPhotos = selectedImagesFlow.value.toMutableList()
             selectedPhotos.remove(photoId)
+            selectedImagesFlow.value = selectedPhotos
 
-            updateCachedPhotosUi()
-            updatedMultipleSelection()
             updateMultipleSelectionContainerContent()
         }
-    }
-
-    private fun updatedMultipleSelection() {
-        val list = selectedPhotos.map { selectedId -> cachedPhotosUi.find { it.id == selectedId } }
-
-        if (list.isEmpty()) {
-            (rvSelectedPhotos.parent as View).visibility = View.INVISIBLE
-            lifecycleScope.launch { delay(300); selectedAdapter.submitList(list) }
-        } else {
-            (rvSelectedPhotos.parent as View).visibility = View.VISIBLE
-            selectedAdapter.submitList(list)
-        }
-
-    }
-
-    private fun updateCachedPhotosUi() {
-        val updated = cachedPhotosUi.map { it.copy(isChecked = selectedPhotos.contains(it.id)) }.toList()
-        adapter.submitList(updated)
-        cachedPhotosUi = updated
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setupView()
+        setupView(savedInstanceState?.getStringArray(KEY_SAVE_INSTANCE_STATE)?.toList() ?: emptyList())
         loadMore()
     }
 
-    private fun setupView() {
-        appbar.doOnPreDraw {
-            appbar
-            rvImages.setPadding(rvImages.paddingLeft, it.height, rvImages.paddingRight, rvImages.paddingBottom)
-            rvImages.scrollToPosition(0)
-        }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArray(KEY_SAVE_INSTANCE_STATE, selectedImagesFlow.value.toTypedArray())
+    }
+
+    private fun setupView(selectedPhotosBefore: List<String>) {
 
         containerSelectMultiple.isVisible = !isSingleSelectionMode
 
+        selectedImagesFlow.value = selectedPhotosBefore
+
+        setupTopPaddingForContent()
         setupClickListeners()
         setupInsets()
         setupAdapters()
+        setupSearchQueryListener()
+        updateMultipleSelectionContainerContent()
+    }
+
+    private fun setupSearchQueryListener() {
+
+        etSearchQuery.addTextChangedListener {
+            val text = it.toString()
+
+            if (text.isNotBlank()) {
+                lifecycleScope.launch {
+                    val photos = loadPhotos(lastLoadedSearchPage, text)
+
+                    lastLoadedSearchPage++
+
+                    loadedImagesFlow.emit(loadedImagesFlow.value + photos)
+                }
+            }
+        }
+    }
+
+    private fun setupTopPaddingForContent() {
+        appbar.doOnPreDraw {
+            rvImages.setPadding(rvImages.paddingLeft, it.height, rvImages.paddingRight, rvImages.paddingBottom)
+            rvImages.scrollToPosition(0)
+        }
     }
 
     private fun setupAdapters() {
         rvImages.adapter = adapter
-        rvSearchResultImages.adapter = searchAdapter
 
         if (!isSingleSelectionMode) rvSelectedPhotos.adapter = selectedAdapter
     }
 
     private fun setupClickListeners() {
         buttonCancel.setOnClickListener {
-            selectedPhotos.clear()
-            updateCachedPhotosUi()
+            selectedImagesFlow.value = emptyList()
             updateMultipleSelectionContainerContent()
         }
 
         buttonContinue.setOnClickListener {
-            val selected = ArrayList(cachedPhotos.filter { selectedPhotos.contains(it.id) })
 
-            setResult(Activity.RESULT_OK, Intent().apply {
-                putParcelableArrayListExtra(KEY_PHOTOS, selected)
-            })
+            val loaded = loadedImagesFlow.value
+            val selectedIds = selectedImagesFlow.value
+
+            val selected = ArrayList(loaded.filter { it.id in selectedIds })
+
+            val intent = Intent().apply { putParcelableArrayListExtra(KEY_PHOTOS, selected) }
+            setResult(Activity.RESULT_OK, intent)
 
             finish()
-        }
-
-        findViewById<SearchBar>(R.id.search_bar).apply {
-            setNavigationOnClickListener { finish() }
         }
     }
 
     private fun setupInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(appbar) { _, windowInsets ->
 
-            val smallSize = resources.getDimensionPixelSize(R.dimen.small_size)
-            val bigSize = resources.getDimensionPixelSize(R.dimen.big_size)
-
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            appbar
-                .updatePadding(top = insets.top, left = insets.left, right = insets.right)
-            rvImages
-                .updatePadding(
-                    left = insets.left + smallSize,
-                    right = insets.right + smallSize,
-                    bottom = insets.bottom + containerSelectMultiple.height + containerSelectMultiple.marginBottom * 2
-                )
-            searchView
-                .updatePadding(top = insets.top, left = insets.left, right = insets.right)
+            appbar.updatePadding(top = insets.top, left = insets.left, right = insets.right)
 
-            val lp = (containerSelectMultiple.layoutParams as ViewGroup.MarginLayoutParams)
-            lp.setMargins(
+            rvImages.updatePadding(
+                left = insets.left + smallSize,
+                right = insets.right + smallSize,
+                bottom = insets.bottom + containerSelectMultiple.height + containerSelectMultiple.marginBottom * 2
+            )
+
+            val lpSelectMultiple = (containerSelectMultiple.layoutParams as ViewGroup.MarginLayoutParams)
+            lpSelectMultiple.setMargins(
                 insets.left + bigSize,
-                0,
+                insets.top + bigSize,
                 insets.right + bigSize,
                 insets.bottom + bigSize,
             )
-            containerSelectMultiple.layoutParams = lp
+            containerSelectMultiple.layoutParams = lpSelectMultiple
 
             WindowInsetsCompat.CONSUMED
         }
@@ -172,42 +228,36 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
 
         lifecycleScope.launch {
             val photos = loadPhotos(lastLoadedPage)
-            val photosUi = photos.map { UnsplashPhotoUi(id = it.id, thumb = it.thumb, isChecked = false) }
 
             lastLoadedPage++
-            cachedPhotos = cachedPhotos + photos
-            cachedPhotosUi = cachedPhotosUi + photosUi
-            adapter.submitList(cachedPhotosUi)
-
-            findViewById<MaterialTextView>(R.id.tv_noPhotos).isVisible = cachedPhotosUi.isEmpty()
+            loadedImagesFlow.emit(loadedImagesFlow.value + photos)
         }
     }
 
     private fun updateMultipleSelectionContainerContent() {
-        val count = selectedPhotos.size
+        val count = selectedImagesFlow.value.size
 
-        buttonCancel.isVisible = count != 0
+        buttonCancel.isEnabled = count != 0
+        tvCounter.isEnabled = count != 0
         buttonContinue.isEnabled = count != 0
-        tvCounter.isVisible = count != 0
 
-        if (count >= 1) {
-            tvCounter.text = resources.getQuantityString(R.plurals.pictures, count, count)
-        }
+        tvCounter.text = resources.getQuantityString(R.plurals.pictures, count, count)
     }
 
     private fun returnSingleResult(photoId: String) {
 
-        val photo = cachedPhotos.find { it.id == photoId }!!
+        val loaded = loadedImagesFlow.value
+        val photo = loaded.find { it.id == photoId }
 
-        setResult(Activity.RESULT_OK, Intent().apply {
-            putParcelableArrayListExtra(KEY_PHOTOS, arrayListOf(photo))
-        })
+        val intent = Intent().apply { putParcelableArrayListExtra(KEY_PHOTOS, arrayListOf(photo)) }
+        setResult(Activity.RESULT_OK, intent)
 
         finish()
     }
 
     companion object {
 
+        private const val KEY_SAVE_INSTANCE_STATE = "KEY_SAVE_INSTANCE_STATE"
         private const val KEY_IS_SINGLE_SELECT = "KEY_IS_SINGLE_SELECT"
         internal const val KEY_PHOTOS = "KEY_PHOTOS"
 

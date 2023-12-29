@@ -1,6 +1,5 @@
 package xyz.savvamirzoyan.unsplash_picker
 
-
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,8 +9,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.imageview.ShapeableImageView
+import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhotoUi
 
 internal class ImagesAdapter(
     private val isForCarousel: Boolean = false,
@@ -43,6 +44,7 @@ internal class ImagesAdapter(
         if (position == itemCount - 1) onLoadMoreCallback()
 
         val item = getItem(position)
+
         holder.bind(item)
     }
 
@@ -84,6 +86,7 @@ internal sealed class ImageViewHolder(view: View) : RecyclerView.ViewHolder(view
         override fun bind(item: UnsplashPhotoUi) {
             Glide.with(imageView)
                 .load(item.thumb)
+                .placeholder(null)
                 .into(imageView)
 
             checkbox.isChecked = item.isChecked
@@ -101,14 +104,17 @@ internal sealed class ImageViewHolder(view: View) : RecyclerView.ViewHolder(view
         private val onItemClick: (position: Int) -> Unit
     ) : ImageViewHolder(view) {
 
+        private val imageView: ShapeableImageView by lazy { view.findViewById(R.id.iv_picture) }
+
         init {
-            itemView.setOnClickListener { onItemClick(adapterPosition) }
+            view.findViewById<View>(R.id.button_cancel).setOnClickListener { onItemClick(adapterPosition) }
         }
 
         override fun bind(item: UnsplashPhotoUi) {
-            Glide.with(itemView as ShapeableImageView)
+            Glide.with(imageView)
                 .load(item.thumb)
-                .into(itemView)
+                .placeholder(null)
+                .into(imageView)
         }
     }
 }

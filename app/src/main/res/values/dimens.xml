@@ -3,4 +3,6 @@
     <dimen name="small_size">4dp</dimen>
     <dimen name="medium_size">8dp</dimen>
     <dimen name="big_size">16dp</dimen>
+    <dimen name="selected_image_height">96dp</dimen>
+    <dimen name="selected_image_recycler_view_height">104dp</dimen>
 </resources>

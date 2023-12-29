@@ -1,86 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="false">
+    android:fitsSystemWindows="false"
+    android:orientation="horizontal">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_images"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingHorizontal="4dp"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        app:layout_behavior="@string/searchbar_scrolling_view_behavior"
-        app:spanCount="@integer/gallery_columns"
-        tools:itemCount="20"
-        tools:listitem="@layout/layout_search_result_image" />
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="?attr/textInputFilledStyle"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_images"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:boxStrokeWidth="0dp"
-            app:boxStrokeWidthFocused="0dp"
-            app:endIconMode="clear_text"
-            app:hintEnabled="false"
-            app:layout_scrollFlags="scroll|enterAlways"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-            app:startIconDrawable="@drawable/ic_search">
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="4dp"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:layout_behavior="@string/searchbar_scrolling_view_behavior"
+            app:spanCount="@integer/gallery_columns"
+            tools:itemCount="20"
+            tools:listitem="@layout/layout_search_result_image" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_search_query"
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="?attr/textInputFilledStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/search_hint"
-                android:inputType="text"
-                android:paddingVertical="16dp" />
-        </com.google.android.material.textfield.TextInputLayout>
-    </com.google.android.material.appbar.AppBarLayout>
+                android:layout_margin="16dp"
+                app:boxStrokeWidth="0dp"
+                app:boxStrokeWidthFocused="0dp"
+                app:endIconMode="clear_text"
+                app:hintEnabled="false"
+                app:layout_scrollFlags="scroll|enterAlways"
+                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
+                app:startIconDrawable="@drawable/ic_search">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_search_query"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/search_hint"
+                    android:inputType="text"
+                    android:paddingVertical="16dp" />
+            </com.google.android.material.textfield.TextInputLayout>
+        </com.google.android.material.appbar.AppBarLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/container_selectMultiple"
         style="@style/Widget.Material3.CardView.Filled"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        app:cardElevation="32dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="bottom|end"
+        app:cardElevation="8dp"
         app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Large"
         tools:layout_margin="@dimen/big_size">
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:animateLayoutChanges="false"
             android:orientation="vertical">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_selectedPhotos"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_gravity="center"
+                android:layout_weight="1"
                 android:clipToPadding="false"
-                android:orientation="horizontal"
-                android:paddingHorizontal="8dp"
+                android:orientation="vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:layout_height="@dimen/selected_image_recycler_view_height"
                 tools:listitem="@layout/layout_selected_image" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/container_controls"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="?colorSurfaceContainerLow"
                 android:minHeight="?actionBarSize">
@@ -91,25 +98,29 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/medium_size"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
                     android:enabled="false"
                     app:icon="@drawable/ic_cross"
                     app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/button_continue"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_goneMarginStart="8dp"
                     app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Medium" />
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/tv_counter"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginHorizontal="16dp"
                     android:layout_marginVertical="8dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="23dp"
                     android:enabled="false"
                     android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/button_continue"
-                    app:layout_constraintHorizontal_bias="0.0"
-                    app:layout_constraintStart_toEndOf="@+id/button_cancel"
+                    app:layout_constraintBottom_toTopOf="@+id/button_continue"
+                    app:layout_constraintEnd_toEndOf="@+id/button_continue"
+                    app:layout_constraintStart_toStartOf="@+id/button_cancel"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintVertical_chainStyle="packed"
                     tools:text="1 picture" />
@@ -120,6 +131,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
                     android:enabled="false"
                     android:insetLeft="0dp"
                     android:insetTop="0dp"
@@ -129,7 +141,6 @@
                     android:text="@android:string/ok"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
                     app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Large" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </LinearLayout>
@@ -142,4 +153,4 @@
         android:layout_gravity="center"
         android:text="😥 No photos found"
         android:visibility="gone" />
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>
