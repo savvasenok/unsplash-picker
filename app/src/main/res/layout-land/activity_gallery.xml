@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="false"
     android:orientation="horizontal">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -29,29 +28,35 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <com.google.android.material.textfield.TextInputLayout
-                style="?attr/textInputFilledStyle"
+            <com.google.android.material.search.SearchBar
+                android:id="@+id/search_bar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                app:boxStrokeWidth="0dp"
-                app:boxStrokeWidthFocused="0dp"
-                app:endIconMode="clear_text"
-                app:hintEnabled="false"
-                app:layout_scrollFlags="scroll|enterAlways"
-                app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full"
-                app:startIconDrawable="@drawable/ic_search">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_search_query"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/search_hint"
-                    android:inputType="text"
-                    android:paddingVertical="16dp" />
-            </com.google.android.material.textfield.TextInputLayout>
+                android:hint="@string/search_hint" />
         </com.google.android.material.appbar.AppBarLayout>
+
+        <com.google.android.material.search.SearchView
+            android:id="@+id/search_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hint="@string/search_hint"
+            app:layout_anchor="@id/search_bar">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </com.google.android.material.search.SearchView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_noPhotos"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_weight="1"
+        android:text="😥 No photos found"
+        android:textAlignment="center"
+        android:visibility="gone" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/container_selectMultiple"
@@ -59,9 +64,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/big_size"
         app:cardElevation="8dp"
-        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Large"
-        tools:layout_margin="@dimen/big_size">
+        app:shapeAppearance="@style/ShapeAppearance.Material3.Corner.Large">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -145,12 +150,4 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/tv_noPhotos"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="😥 No photos found"
-        android:visibility="gone" />
 </LinearLayout>

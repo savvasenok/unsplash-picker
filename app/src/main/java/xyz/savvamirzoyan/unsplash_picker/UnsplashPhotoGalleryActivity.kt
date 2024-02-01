@@ -3,35 +3,40 @@ package xyz.savvamirzoyan.unsplash_picker
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
-import android.view.ViewGroup
+import android.util.Log
+import android.widget.EdgeEffect
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.isVisible
-import androidx.core.view.marginBottom
 import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
-import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.search.SearchView
 import com.google.android.material.textview.MaterialTextView
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhoto
 import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhotoUi
+
+/*
+* TODO: fix spacing when single select
+* TODO: implement search
+* */
 
 class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery) {
 
@@ -47,7 +52,9 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
     private val buttonContinue by lazy { findViewById<MaterialButton>(R.id.button_continue) }
     private val tvCounter by lazy { findViewById<MaterialTextView>(R.id.tv_counter) }
     private val rvSelectedPhotos by lazy { findViewById<RecyclerView>(R.id.rv_selectedPhotos) }
-    private val etSearchQuery by lazy { findViewById<TextInputEditText>(R.id.et_search_query) }
+
+    //    private val etSearchQuery by lazy { findViewById<TextInputEditText>(R.id.et_search_query) }
+    private val searchView by lazy { findViewById<SearchView>(R.id.search_view) }
     private val tvNoPhotos by lazy { findViewById<MaterialTextView>(R.id.tv_noPhotos) }
 
     private val isSingleSelectionMode: Boolean by lazy { intent.extras?.getBoolean(KEY_IS_SINGLE_SELECT)!! }
@@ -58,11 +65,16 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
     }
 
     private val animationManager by lazy { AnimationManager() }
+    private val viewInsetsManager by lazy { ViewInsetsManager(isSingleSelectionMode, ScreenRotationManager()) }
 
-    private val loadedImagesFlow = MutableStateFlow<List<UnsplashPhoto>>(emptyList())
+    private val _searchQueryFlow = MutableStateFlow("")
+
+    private val _loadedImagesFlow = MutableStateFlow<List<UnsplashPhoto>>(emptyList())
+    private val loadedImagesFlow: Flow<List<UnsplashPhoto>> = _loadedImagesFlow
+        .onEach { images -> images.onEach { Glide.with(this).load(it.thumb).preload() } }
     private val selectedImagesFlow = MutableStateFlow<List<String>>(emptyList())
     private val loadedImagesUiFlow = combine(
-        loadedImagesFlow.onEach { images -> images.onEach { Glide.with(this).load(it).preload(500, 500) } },
+        loadedImagesFlow,
         selectedImagesFlow
     ) { images, selectedIds ->
         images.map { UnsplashPhotoUi(id = it.id, thumb = it.thumb, isChecked = it.id in selectedIds) }
@@ -96,7 +108,9 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
 
             adapter.submitList(imagesUi)
             lastSelectedAmount = onlySelected.size
-        }.stateIn(lifecycleScope, SharingStarted.Eagerly, emptyList())
+        }
+
+    private var job: Job? = null
 
     private val adapter: ImagesAdapter by lazy {
         if (isSingleSelectionMode) ImagesAdapter(false, ::loadMore, ::returnSingleResult)
@@ -128,6 +142,16 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
 
         setupView(savedInstanceState?.getStringArray(KEY_SAVE_INSTANCE_STATE)?.toList() ?: emptyList())
         loadMore()
+
+        job = lifecycleScope.launch {
+            loadedImagesUiFlow.collect()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job?.cancel()
+        job = null
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -144,26 +168,25 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
         setupTopPaddingForContent()
         setupClickListeners()
         setupInsets()
-        setupAdapters()
+        setupRecyclerViews()
         setupSearchQueryListener()
         updateMultipleSelectionContainerContent()
     }
 
     private fun setupSearchQueryListener() {
 
-        etSearchQuery.addTextChangedListener {
-            val text = it.toString()
-
-            if (text.isNotBlank()) {
-                lifecycleScope.launch {
-                    val photos = loadPhotos(lastLoadedSearchPage, text)
-
-                    lastLoadedSearchPage++
-
-                    loadedImagesFlow.emit(loadedImagesFlow.value + photos)
-                }
-            }
-        }
+//        etSearchQuery.addTextChangedListener {
+//            val text = it.toString()
+//
+//            if (text.isNotBlank()) {
+//                lifecycleScope.launch {
+//                    val photos = loadPhotos(lastLoadedSearchPage, text)
+//
+//                    lastLoadedSearchPage++
+//                    _loadedImagesFlow.emit(_loadedImagesFlow.value + photos)
+//                }
+//            }
+//        }
     }
 
     private fun setupTopPaddingForContent() {
@@ -173,10 +196,23 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
         }
     }
 
-    private fun setupAdapters() {
+    private fun setupRecyclerViews() {
         rvImages.adapter = adapter
 
-        if (!isSingleSelectionMode) rvSelectedPhotos.adapter = selectedAdapter
+        if (!isSingleSelectionMode) {
+            rvSelectedPhotos.adapter = selectedAdapter
+            rvSelectedPhotos.edgeEffectFactory = object : RecyclerView.EdgeEffectFactory() {
+                override fun createEdgeEffect(view: RecyclerView, direction: Int): EdgeEffect {
+                    return EdgeEffect(view.context).apply { color = Color.parseColor("#FFFFFF") }
+                }
+            }
+        }
+
+        rvImages.edgeEffectFactory = object : RecyclerView.EdgeEffectFactory() {
+            override fun createEdgeEffect(view: RecyclerView, direction: Int): EdgeEffect {
+                return EdgeEffect(view.context).apply { color = Color.parseColor("#FFFFFF") }
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -187,7 +223,7 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
 
         buttonContinue.setOnClickListener {
 
-            val loaded = loadedImagesFlow.value
+            val loaded = _loadedImagesFlow.value
             val selectedIds = selectedImagesFlow.value
 
             val selected = ArrayList(loaded.filter { it.id in selectedIds })
@@ -203,22 +239,21 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
         ViewCompat.setOnApplyWindowInsetsListener(appbar) { _, windowInsets ->
 
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-            appbar.updatePadding(top = insets.top, left = insets.left, right = insets.right)
 
-            rvImages.updatePadding(
-                left = insets.left + smallSize,
-                right = insets.right + smallSize,
-                bottom = insets.bottom + containerSelectMultiple.height + containerSelectMultiple.marginBottom * 2
-            )
+            val insetLeftImages: Int
+            val insetRightImages: Int
+            val insetSelectMultipleContainerLeft: Int
 
-            val lpSelectMultiple = (containerSelectMultiple.layoutParams as ViewGroup.MarginLayoutParams)
-            lpSelectMultiple.setMargins(
-                insets.left + bigSize,
-                insets.top + bigSize,
-                insets.right + bigSize,
-                insets.bottom + bigSize,
+            viewInsetsManager.applyProperInsets(
+                activity = this,
+                insetLeft = insets.left,
+                insetTop = insets.top,
+                insetRight = insets.right,
+                insetBottom = insets.bottom,
+                appBarLayout = appbar,
+                multipleSelectorContainer = containerSelectMultiple,
+                recyclerview = rvImages
             )
-            containerSelectMultiple.layoutParams = lpSelectMultiple
 
             WindowInsetsCompat.CONSUMED
         }
@@ -230,7 +265,7 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
             val photos = loadPhotos(lastLoadedPage)
 
             lastLoadedPage++
-            loadedImagesFlow.emit(loadedImagesFlow.value + photos)
+            _loadedImagesFlow.emit(_loadedImagesFlow.value + photos)
         }
     }
 
@@ -246,7 +281,7 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
 
     private fun returnSingleResult(photoId: String) {
 
-        val loaded = loadedImagesFlow.value
+        val loaded = _loadedImagesFlow.value
         val photo = loaded.find { it.id == photoId }
 
         val intent = Intent().apply { putParcelableArrayListExtra(KEY_PHOTOS, arrayListOf(photo)) }

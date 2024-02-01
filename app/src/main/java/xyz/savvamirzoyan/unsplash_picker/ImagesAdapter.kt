@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.imageview.ShapeableImageView
 import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhotoUi
@@ -89,8 +88,7 @@ internal sealed class ImageViewHolder(view: View) : RecyclerView.ViewHolder(view
                 .placeholder(null)
                 .into(imageView)
 
-            checkbox.isChecked = item.isChecked
-            checkbox.isVisible = item.isChecked
+            bind(item.isChecked)
         }
 
         override fun bind(isChecked: Boolean) {
