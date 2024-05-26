@@ -9,4 +9,18 @@
     </style>
 
     <style name="Theme.Unsplashpicker" parent="Base.Theme.Unsplashpicker" />
+
+    <style name="MoreRoundedAtTop">
+        <item name="cornerSizeTopLeft">16dp</item>
+        <item name="cornerSizeTopRight">16dp</item>
+        <item name="cornerSizeBottomRight">4dp</item>
+        <item name="cornerSizeBottomLeft">4dp</item>
+    </style>
+
+    <style name="MoreRoundedAtBottom">
+        <item name="cornerSizeTopLeft">4dp</item>
+        <item name="cornerSizeTopRight">4dp</item>
+        <item name="cornerSizeBottomRight">16dp</item>
+        <item name="cornerSizeBottomLeft">16dp</item>
+    </style>
 </resources>

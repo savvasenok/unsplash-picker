@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "unsplash-picker"
 include(":app")
- 
+include(":unsplash-picker")
