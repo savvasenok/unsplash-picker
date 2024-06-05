@@ -1,7 +1,0 @@
-<resources>
-    <!-- Base application theme. -->
-    <style name="Base.Theme.UnsplashpickerExample" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-    </style>
-
-    <style name="Theme.UnsplashpickerExample" parent="Base.Theme.UnsplashpickerExample" />
-</resources>
