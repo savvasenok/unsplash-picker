@@ -13,7 +13,7 @@
         android:label="Unsplash Picker Demo"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Unsplashpicker"
+        android:theme="@style/Theme.UnsplashpickerExample"
         tools:targetApi="31">
 
         <activity

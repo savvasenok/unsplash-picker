@@ -5,6 +5,7 @@
 
     <application>
         <activity
+            android:theme="@style/Theme.Unsplashpicker"
             android:name=".UnsplashPhotoGalleryActivity"
             android:exported="true" />
     </application>

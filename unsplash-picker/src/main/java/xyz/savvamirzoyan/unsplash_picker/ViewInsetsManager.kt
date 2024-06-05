@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.card.MaterialCardView
 
-class ViewInsetsManager(private val isSingleSelect: Boolean) {
+class ViewInsetsManager {
 
     fun applyProperInsets(
         activity: Activity,
@@ -20,14 +20,15 @@ class ViewInsetsManager(private val isSingleSelect: Boolean) {
         multipleSelectorContainer: MaterialCardView?,
         recyclerview: RecyclerView,
         searchRecyclerview: RecyclerView,
+        isWideEnough: Boolean,
     ) {
 
         val smallSize = activity.resources.getDimension(R.dimen.small_size).toInt()
         val bigSize = activity.resources.getDimension(R.dimen.big_size).toInt()
 
-        applyInsetsForAppBar(appBarLayout, insetLeft, insetRight)
-        applyInsetsForRecyclerView(recyclerview, insetLeft, insetRight, smallSize)
-        applyInsetsForRecyclerView(searchRecyclerview, insetLeft, insetRight, smallSize)
+        applyInsetsForAppBar(appBarLayout, insetLeft, insetRight, isWideEnough)
+        applyInsetsForRecyclerView(recyclerview, insetLeft, insetRight, smallSize, isWideEnough)
+        applyInsetsForRecyclerView(searchRecyclerview, insetLeft, insetRight, smallSize, isWideEnough)
 
         multipleSelectorContainer?.let {
             applyInsetsForMultipleSelectorContainer(
@@ -46,23 +47,12 @@ class ViewInsetsManager(private val isSingleSelect: Boolean) {
         insetLeft: Int,
         insetRight: Int,
         margin: Int,
+        isWideEnough: Boolean,
     ) {
-        if (isSingleSelect) {
-            recyclerview.updatePadding(left = insetLeft + margin, right = insetRight + margin)
-        } else {
-//            when (rotation) {
-//                Surface.ROTATION_0 ->
-//                    recyclerview.updatePadding(left = insetLeft + margin, right = insetRight + margin)
-//
-//                Surface.ROTATION_90 ->
-//                    recyclerview.updatePadding(left = margin, right = margin)
-//
-//                Surface.ROTATION_180 ->
-            recyclerview.updatePadding(left = insetLeft + margin, right = insetRight + margin)
-//
-//                Surface.ROTATION_270 ->
-//                    recyclerview.updatePadding(left = insetLeft + margin, right = margin)
-        }
+
+        val multiplier = if (isWideEnough) 0 else 1
+
+        recyclerview.updatePadding(left = insetLeft + margin, right = insetRight * multiplier + margin)
     }
 
     private fun applyInsetsForMultipleSelectorContainer(
@@ -85,12 +75,11 @@ class ViewInsetsManager(private val isSingleSelect: Boolean) {
         appbar: AppBarLayout,
         insetLeft: Int,
         insetRight: Int,
+        isWideEnough: Boolean,
     ) {
 
-        if (isSingleSelect) {
-            appbar.updatePadding(left = insetLeft, right = insetRight)
-        } else {
-            appbar.updatePadding(left = insetLeft, right = 0)
-        }
+        val multiplier = if (isWideEnough) 0 else 1
+
+        appbar.updatePadding(left = insetLeft, right = insetRight * multiplier)
     }
 }

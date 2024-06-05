@@ -7,8 +7,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.google.android.material.button.MaterialButton
 import xyz.savvamirzoyan.unsplash_picker.PickingImageFlowFromUnsplashContract
-import xyz.savvamirzoyan.unsplash_picker.R
-import xyz.savvamirzoyan.unsplash_picker.UnsplashPickerConfig
 
 class ExampleActivity : AppCompatActivity(R.layout.activity_example) {
 
@@ -26,8 +24,6 @@ class ExampleActivity : AppCompatActivity(R.layout.activity_example) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        UnsplashPickerConfig.init("")
 
         findViewById<MaterialButton>(R.id.button_select_single).setOnClickListener {
             startPicker(true)

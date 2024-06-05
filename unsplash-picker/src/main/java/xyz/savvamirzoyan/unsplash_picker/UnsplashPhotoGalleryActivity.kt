@@ -3,8 +3,11 @@ package xyz.savvamirzoyan.unsplash_picker
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
@@ -26,10 +29,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.color.DynamicColors
 import com.google.android.material.search.SearchBar
 import com.google.android.material.search.SearchView
 import com.google.android.material.textview.MaterialTextView
 import kotlinx.coroutines.launch
+
+// TODO: make 3-button navigation  contrast. Is not visible on light theme on light surface
+// TODO: API 34, multiple select, search, rotate left: fix padding of inner search when something is searched
 
 class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery) {
 
@@ -58,7 +65,19 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
     }
 
     private val animationManager by lazy { AnimationManager() }
-    private val viewInsetsManager by lazy { ViewInsetsManager(isSingleSelectionMode) }
+    private val viewInsetsManager by lazy { ViewInsetsManager() }
+
+    private val isWideEnough: Boolean by lazy {
+
+        val dm = resources.displayMetrics
+
+        val triggerWidthDp = 840f
+        val triggerWidthPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, triggerWidthDp, dm)
+
+        val totalWidth = dm.widthPixels
+
+        totalWidth > triggerWidthPx
+    }
 
     private val adapter: ImagesAdapter by lazy {
         ImagesAdapter(false, viewModel::loadMoreImages, viewModel::onImageClick)
@@ -74,6 +93,10 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        DynamicColors.applyToActivitiesIfAvailable(application)
+
+
         setupView()
         setupFlowListeners()
     }
@@ -211,6 +234,7 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
     }
 
     private fun setupInsets() {
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById<ViewGroup>(android.R.id.content).rootView) { _, windowInsets ->
 
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -224,7 +248,8 @@ class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery
                 appBarLayout = appbar,
                 multipleSelectorContainer = containerSelectMultiple,
                 recyclerview = rvImages,
-                searchRecyclerview = rvSearchResults
+                searchRecyclerview = rvSearchResults,
+                isWideEnough = isWideEnough
             )
 
             searchBar.updateLayoutParams<MarginLayoutParams> {
