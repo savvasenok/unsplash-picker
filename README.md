@@ -8,11 +8,11 @@ An Android library to pick single or multiple photos from Unsplash
 Add it in your root `build.gradle` at the end of repositories:
 ```gradle
 dependencyResolutionManagement {
-	repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-	repositories {
-		mavenCentral()
-		maven { url 'https://jitpack.io' }
-	}
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
 }
 ```
 ### Step 2: Add dependency
@@ -20,20 +20,20 @@ Add dependency to your module:
 ``` gradle
 dependencies {
 
-	... other dependencies
+    // ... other dependencies
 
-	implementation = "com.github.savvasenok:unsplash-picker:1.0"
+    implementation "com.github.savvasenok:unsplash-picker:1.0"
 }
 ```
 ### Step 3: Initialize library
 You can initialize the library from any place in your app, but it is recommended to do it in your `Application` class in `onCreate` like this:
 ```kotlin
 class App : Application() {  
-  
-	override fun onCreate() {  
-		super.onCreate()  
-  
-        UnsplashPickerConfig.init("YOUR_UNSPLASH_API_KEY")    
+
+    override fun onCreate() {  
+        super.onCreate()
+
+        UnsplashPickerConfig.init("YOUR_UNSPLASH_API_KEY") 
     }
 }
 ```
@@ -54,7 +54,7 @@ data class UnsplashPhoto(
 Paste this contract in your **Activity**/**Fragment**/**DialogFragment** like any other contract you would do:
 ```kotlin
 val contract = registerForActivityResult(PickingImageFlowFromUnsplashContract()) { unsplashPhotos ->
-	/* your code here */ 
+    /* your code here */ 
 }
 ```
 
