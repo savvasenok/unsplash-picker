@@ -2,7 +2,6 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("kotlin-parcelize")
-    `maven-publish`
 }
 
 android {
@@ -41,16 +40,16 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.0")
 }
 
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("release") {
-                from(components["release"])
-
-                groupId = "xyz.savvamirzoyan"
-                artifactId = "unsplash_picker"
-                version = "1.0"
-            }
-        }
-    }
-}
+//afterEvaluate {
+//    publishing {
+//        publications {
+//            create<MavenPublication>("release") {
+//                from(components["release"])
+//
+//                groupId = "xyz.savvamirzoyan"
+//                artifactId = "unsplash_picker"
+//                version = "1.0"
+//            }
+//        }
+//    }
+//}
