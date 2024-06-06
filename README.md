@@ -1,8 +1,18 @@
-# unsplash-photo-picker
+# Android Unsplash Photo Picker
 
 An Android library to pick single or multiple photos from Unsplash
-![output](https://github.com/savvasenok/unsplash-photo-picker/assets/31893797/b912fa17-2cd2-4801-b8c1-825bbcd9eea3)  
-![output](https://github.com/savvasenok/unsplash-photo-picker/assets/31893797/9554e5a0-b64d-45aa-a51d-c7c89a208b4f)
+
+Features:
++ Material 3
++ Adaptive layout
++ Search
++ Single and multiple selection
+
+![1](https://github.com/savvasenok/unsplash-picker/assets/31893797/1628465e-28b1-435d-91ef-ee2223ea87a0)
+![2](https://github.com/savvasenok/unsplash-picker/assets/31893797/3791ee0c-851f-40f8-9919-fa10f3c35f81)
+
+
+
 ## How to use?
 ### Step 1: Add repository
 Add it in your root `build.gradle` at the end of repositories:
