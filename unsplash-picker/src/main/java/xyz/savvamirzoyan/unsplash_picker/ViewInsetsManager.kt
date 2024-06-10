@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.card.MaterialCardView
 
-class ViewInsetsManager {
+internal class ViewInsetsManager {
 
     fun applyProperInsets(
         activity: Activity,

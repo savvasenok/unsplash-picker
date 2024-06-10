@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="search_hint">Cerca su Unsplash</string>
+    <plurals name="pictures">
+        <item quantity="one">%d immagine</item>
+        <item quantity="other">%d immagini</item>
+    </plurals>
+</resources>

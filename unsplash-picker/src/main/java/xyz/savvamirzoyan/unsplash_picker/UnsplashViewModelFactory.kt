@@ -3,7 +3,7 @@ package xyz.savvamirzoyan.unsplash_picker
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
-class UnsplashViewModelFactory(
+internal class UnsplashViewModelFactory(
     private val isSingleSelectMode: Boolean,
 ) : ViewModelProvider.Factory {
 

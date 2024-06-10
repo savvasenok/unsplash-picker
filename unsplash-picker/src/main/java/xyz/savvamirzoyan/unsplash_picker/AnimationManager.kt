@@ -6,7 +6,7 @@ import androidx.core.animation.doOnStart
 
 private const val DURATION = 300L
 
-class AnimationManager {
+internal class AnimationManager {
 
     fun animateHeight(
         from: Float,

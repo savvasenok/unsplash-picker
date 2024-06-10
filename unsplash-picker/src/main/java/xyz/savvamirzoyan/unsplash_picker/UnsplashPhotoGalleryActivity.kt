@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 // TODO: make 3-button navigation  contrast. Is not visible on light theme on light surface
 // TODO: API 34, multiple select, search, rotate left: fix padding of inner search when something is searched
 
-class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery) {
+internal class UnsplashPhotoGalleryActivity : AppCompatActivity(R.layout.activity_gallery) {
 
     private val viewModel by lazy {
         ViewModelProvider(

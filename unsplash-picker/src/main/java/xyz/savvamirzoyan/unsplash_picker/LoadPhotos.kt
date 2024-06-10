@@ -10,7 +10,7 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
-suspend fun loadPhotos(page: Int): List<UnsplashPhoto> = withContext(Dispatchers.IO) {
+internal suspend fun loadPhotos(page: Int): List<UnsplashPhoto> = withContext(Dispatchers.IO) {
     var urlConnection: HttpURLConnection? = null
 
     try {
@@ -41,7 +41,7 @@ suspend fun loadPhotos(page: Int): List<UnsplashPhoto> = withContext(Dispatchers
     }
 }
 
-suspend fun loadPhotos(page: Int, searchQuery: String): List<UnsplashPhoto> = withContext(Dispatchers.IO) {
+internal suspend fun loadPhotos(page: Int, searchQuery: String): List<UnsplashPhoto> = withContext(Dispatchers.IO) {
 
     var urlConnection: HttpURLConnection? = null
 

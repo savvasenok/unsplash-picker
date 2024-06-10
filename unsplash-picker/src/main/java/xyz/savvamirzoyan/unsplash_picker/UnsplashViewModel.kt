@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhoto
 import xyz.savvamirzoyan.unsplash_picker.model.UnsplashPhotoUi
 
-class UnsplashViewModel(
+internal class UnsplashViewModel(
     private val isSingleSelectMode: Boolean,
 ) : ViewModel() {
 
